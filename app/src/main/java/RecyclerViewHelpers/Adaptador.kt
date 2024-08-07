@@ -10,12 +10,19 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import modelo.ClaseConexion
 import modelo.tbPacientes
 import thomas.galdamez.proyectoformativoo.R
 import thomas.galdamez.proyectoformativoo.ver_pacientes
 
 class Adaptador(var Datos: List<tbPacientes>): RecyclerView.Adapter <ViewHolder>() {
+
+    fun ActualizarPantalla(uuid_Pacientes: String, nombrePaciente: String)  {
+        val index = Datos.indexOfFirst { it.uuid_Pacientes == uuid_Pacientes }
+        Datos[index].Nombres= nombrePaciente
+        notifyDataSetChanged()
+    }
 
     fun EliminarRegistro(nombrePaciente: String, posicion: Int) {
         //Notificar al adaptador
@@ -40,24 +47,27 @@ class Adaptador(var Datos: List<tbPacientes>): RecyclerView.Adapter <ViewHolder>
     }
 
     //Editar
-    fun editarDatos(nuevoNombre: String, nuevoApellido: String, nuevoEdad: Int, nuevoEnfermedad: String, nuevoHabitacion: Int, nuevoCama: Int, nuevoFecha: String, nuevoReceta: String, uuid_Pacientes: String){
+    fun editarDatos(Nombres: String, Apellidos: String, Edad: Int, Enfermedad: String, Numero_Habitacion: Int, Numero_Cama: Int, Fecha_Nacimiento: String, Receta: String, uuid_Pacientes: String){
         GlobalScope.launch(Dispatchers.IO){
             val objConexion = ClaseConexion().cadenaConexion()
 
-            val updateArbitro = objConexion?.prepareStatement("update tbPacientes set Nombres =?, Apellidos =?, Edad =?, Enfermedad =?, Numero_Habitacion =?, Numero_Cama =?, Fecha_Nacimiento =?, Receta =? where uuid_Pacientes =?")!!
-            updateArbitro.setString(1, nuevoNombre)
-            updateArbitro.setString(2, nuevoApellido)
-            updateArbitro.setInt(3, nuevoEdad)
-            updateArbitro.setString(4, nuevoEnfermedad)
-            updateArbitro.setInt(5, nuevoHabitacion)
-            updateArbitro.setInt(6, nuevoCama)
-            updateArbitro.setString(7, nuevoFecha)
-            updateArbitro.setString(8, nuevoReceta)
-            updateArbitro.setString(9, uuid_Pacientes)
-            updateArbitro.executeUpdate()
+            val updatePacientes = objConexion?.prepareStatement("update tbPacientes set Nombres =?, Apellidos =?, Edad =?, Enfermedad =?, Numero_Habitacion =?, Numero_Cama =?, Fecha_Nacimiento =?, Receta =? where uuid_Pacientes =?")!!
+            updatePacientes.setString(1, Nombres)
+            updatePacientes.setString(2, Apellidos)
+            updatePacientes.setInt(3, Edad)
+            updatePacientes.setString(4, Enfermedad)
+            updatePacientes.setInt(5, Numero_Habitacion)
+            updatePacientes.setInt(6, Numero_Cama)
+            updatePacientes.setString(7, Fecha_Nacimiento)
+            updatePacientes.setString(8, Receta)
+            updatePacientes.setString(9, uuid_Pacientes)
+            updatePacientes.executeUpdate()
 
             val commit = objConexion.prepareStatement("commit")
             commit?.executeUpdate()
+            withContext(Dispatchers.Main){
+                ActualizarPantalla(uuid_Pacientes, Nombres)
+            }
         }
     }
 
@@ -94,8 +104,7 @@ class Adaptador(var Datos: List<tbPacientes>): RecyclerView.Adapter <ViewHolder>
 
         holder.imgEditar.setOnClickListener {
             val context = holder.itemView.context
-            val builder = android.app.AlertDialog.Builder(context)
-
+            val builder = AlertDialog.Builder(context)
             builder.setTitle("Editar Paciente")
 
             val txtNuevoNombre = EditText(context).apply {
@@ -111,10 +120,10 @@ class Adaptador(var Datos: List<tbPacientes>): RecyclerView.Adapter <ViewHolder>
                 setHint(item.Enfermedad)
             }
             val txtNuevoHabitacion = EditText(context).apply {
-                setHint(item.Numero_Habitacion)
+                setHint(item.Numero_Habitacion.toString())
             }
             val txtNuevoCama = EditText(context).apply {
-                setHint(item.Numero_Cama)
+                setHint(item.Numero_Cama.toString())
             }
             val txtNuevoFecha = EditText(context).apply {
                 setHint(item.Fecha_Nacimiento)
